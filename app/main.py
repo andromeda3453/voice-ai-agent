@@ -63,6 +63,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+
 # Health check endpoint
 @app.get("/health", tags=["System"])
 def health_check():
@@ -70,13 +74,14 @@ def health_check():
     return {"status": "ok", "environment": settings.environment}
 
 
-@app.get("/", tags=["System"])
-def root():
-    """Service root with overview."""
+@app.get("/api", tags=["System"])
+def api_root():
+    """Service API overview."""
     return {
         "service": settings.app_name,
         "docs": "/docs",
         "health": "/health",
+        "dashboard": "/dashboard",
         "endpoints": {
             "patients": "/patients",
             "vapi_webhook": "/vapi/webhook",
@@ -84,6 +89,19 @@ def root():
     }
 
 
+# Static files and Web Dashboard
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+    @app.get("/", include_in_schema=False)
+    @app.get("/dashboard", include_in_schema=False)
+    async def serve_dashboard():
+        """Serve Web UI Dashboard."""
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
+
 # Include Routers
 app.include_router(patients.router)
 app.include_router(vapi_tools.router)
+

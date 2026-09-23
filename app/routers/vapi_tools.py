@@ -207,3 +207,25 @@ async def tool_update_patient(request: Request, db: Session = Depends(get_db)):
     payload = await request.json()
     args = payload.get("arguments") or payload.get("message", {}).get("arguments") or payload
     return execute_tool_call("update_patient", args, db)
+
+
+@router.get("/logs")
+def get_vapi_call_logs(limit: int = 50, db: Session = Depends(get_db)):
+    """Retrieve recent call activity and tool execution logs."""
+    logs = crud.get_call_logs(db=db, limit=limit)
+    return {
+        "data": [
+            {
+                "call_id": l.call_id,
+                "caller_phone": l.caller_phone,
+                "patient_id": l.patient_id,
+                "action_type": l.action_type,
+                "payload": l.payload,
+                "status": l.status,
+                "created_at": l.created_at.isoformat() if l.created_at else None,
+            }
+            for l in logs
+        ],
+        "error": None,
+    }
+

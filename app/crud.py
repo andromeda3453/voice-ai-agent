@@ -114,3 +114,9 @@ def log_call_action(
     except Exception as e:
         logger.error(f"Failed to write call log: {e}")
         db.rollback()
+
+
+def get_call_logs(db: Session, limit: int = 50) -> List[CallLog]:
+    """Retrieve recent call activity logs."""
+    query = select(CallLog).order_by(CallLog.created_at.desc()).limit(limit)
+    return list(db.execute(query).scalars().all())

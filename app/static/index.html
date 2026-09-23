@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareAssist — Registered Patients</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-card: rgba(17, 24, 39, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --primary: #4f46e5;
+      --primary-light: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent-teal: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary), var(--accent-teal));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.15rem;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .patient-counter-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: var(--primary-light);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Top Search & Filter Bar */
+    .controls-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .search-wrap i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.7rem 1rem 0.7rem 2.6rem;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Table */
+    .table-container {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 950px;
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1rem 1.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    td {
+      padding: 1.15rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .patient-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .patient-name {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+
+    .patient-id {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge-teal { background: rgba(6, 182, 212, 0.15); color: var(--accent-teal); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+    .badge-slate { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+
+    .meta-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .emergency-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-hospital-user"></i>
+      </div>
+      <div>
+        <div class="brand-title">Registered Patients</div>
+      </div>
+    </div>
+    <div class="patient-counter-badge">
+      <i class="fa-solid fa-user-check"></i>
+      <span id="patient-count">Loading...</span>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Search & Refresh Bar -->
+    <div class="controls-panel">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input 
+          type="text" 
+          id="search-input" 
+          class="search-input" 
+          placeholder="Search registered patients by name, phone, or date of birth..." 
+          oninput="filterPatients()" 
+        />
+      </div>
+      <button class="btn" onclick="loadPatients()">
+        <i class="fa-solid fa-rotate-right"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Patients Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>DOB & Sex</th>
+            <th>Contact Phone</th>
+            <th>Address</th>
+            <th>Insurance</th>
+            <th>Language</th>
+            <th>Emergency Contact</th>
+          </tr>
+        </thead>
+        <tbody id="patients-tbody">
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 4rem;">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+              Loading registered patients...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    let patientsCache = [];
+
+    document.addEventListener('DOMContentLoaded', loadPatients);
+
+    async function loadPatients() {
+      try {
+        const res = await fetch('/patients');
+        const json = await res.json();
+        if (json.data) {
+          patientsCache = json.data;
+          renderPatients(patientsCache);
+          document.getElementById('patient-count').textContent = `${patientsCache.length} Patients`;
+        }
+      } catch (err) {
+        console.error('Failed to load patients:', err);
+        document.getElementById('patients-tbody').innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: #f43f5e; padding: 3rem;">
+              Failed to connect to the backend server.
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderPatients(patients) {
+      const tbody = document.getElementById('patients-tbody');
+      if (!patients || patients.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+              No registered patients found.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = patients.map(p => {
+        const initials = `${p.first_name[0] || ''}${p.last_name[0] || ''}`.toUpperCase();
+        
+        const insuranceHtml = p.insurance_provider 
+          ? `<span class="badge badge-teal"><i class="fa-solid fa-shield"></i> ${p.insurance_provider}</span><div class="meta-text" style="font-size: 0.75rem; margin-top: 0.2rem;">ID: ${p.insurance_member_id || 'N/A'}</div>`
+          : `<span class="badge badge-amber">Self-Pay / None</span>`;
+
+        const addressLine = [p.address_line_1, p.address_line_2, `${p.city}, ${p.state} ${p.zip_code}`].filter(Boolean).join(', ');
+
+        const emergencyHtml = p.emergency_contact_name
+          ? `<div><strong>${p.emergency_contact_name}</strong></div><div class="emergency-text">${p.emergency_contact_phone || 'No phone'}</div>`
+          : `<span class="meta-text">None</span>`;
+
+        return `
+          <tr>
+            <td>
+              <div class="patient-cell">
+                <div class="avatar">${initials}</div>
+                <div>
+                  <div class="patient-name">${p.first_name} ${p.last_name}</div>
+                  <div class="patient-id" title="UUID: ${p.patient_id}">${p.patient_id.substring(0, 8)}...</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>${p.date_of_birth}</div>
+              <div class="meta-text">${p.sex}</div>
+            </td>
+            <td>
+              <div><i class="fa-solid fa-phone" style="color: var(--text-dim); margin-right: 0.4rem;"></i>${p.phone_number}</div>
+              ${p.email ? `<div class="meta-text" style="font-size: 0.8rem;">${p.email}</div>` : ''}
+            </td>
+            <td style="max-width: 240px;">${addressLine}</td>
+            <td>${insuranceHtml}</td>
+            <td><span class="badge badge-slate">${p.preferred_language || 'English'}</span></td>
+            <td>${emergencyHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterPatients() {
+      const q = document.getElementById('search-input').value.toLowerCase().trim();
+      if (!q) {
+        renderPatients(patientsCache);
+        return;
+      }
+
+      const filtered = patientsCache.filter(p => 
+        p.first_name.toLowerCase().includes(q) ||
+        p.last_name.toLowerCase().includes(q) ||
+        p.phone_number.includes(q) ||
+        p.date_of_birth.includes(q) ||
+        (p.city && p.city.toLowerCase().includes(q)) ||
+        (p.state && p.state.toLowerCase().includes(q))
+      );
+
+      renderPatients(filtered);
+    }
+  </script>
+</body>
+</html>
