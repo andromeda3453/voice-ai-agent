@@ -81,6 +81,7 @@ All API responses return a standard envelope:
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/health` | Health check endpoint |
+| `GET` | `/dashboard` | Web dashboard for viewing registered patients |
 | `GET` | `/patients` | List patients. Query params: `?last_name=`, `?date_of_birth=`, `?phone_number=`, `?include_deleted=`, `?limit=`, `?offset=` |
 | `GET` | `/patients/{patient_id}` | Retrieve patient by UUID |
 | `POST` | `/patients` | Create a new patient |
@@ -133,15 +134,89 @@ pytest -v
 
 ## Vapi Integration Setup
 
+### Dashboard Setup
+
+1. **Create account & add payment method**
+   Sign up at [dashboard.vapi.ai](https://dashboard.vapi.ai). A payment method is required on file even for the free US number, though the free number itself isn't charged.
+
+2. **Create an assistant**
+   Go to **Assistants → Create Assistant**. Set the **Model** to Google Gemini, and choose a voice/transcriber (defaults work fine to start).
+
+3. **Write the system prompt and first message**
+   In the assistant's Model tab, set the first message (e.g. *"Thank you for calling Community Health Clinic, my name is CareAssist..."*) and paste in the full system prompt from [`vapi/system_prompt.md`](vapi/system_prompt.md): field collection order, confirmation step, correction handling, and re-prompt rules for invalid input.
+
+4. **Create the custom tools**
+   Go to **Tools → Create Tool**, using the **API Request** tool type for each of the three tools below (this calls this project's REST API directly with no extra webhook server needed). See [Custom Tool Configurations](#custom-tool-configurations) below for the exact endpoints and parameters.
+
+5. **Attach the tools to the assistant**
+   Back in the assistant config, under the **Tools/Functions** tab, add the three tools created above so the LLM knows when to call them mid-conversation.
+
+6. **Provision a phone number**
+   Go to **Phone Numbers → Create Phone Number → Free Vapi Number**, enter a US area code, and create it.
+
+7. **Route the number to the assistant**
+   Open the new phone number's settings, and under **Inbound Settings** select the assistant built above, then **Save**.
+
+> **Note on Render cold starts**: The backend is deployed on Render's free tier, which sleeps after inactivity and takes ~50 seconds to wake. Ping `GET /health` before testing calls to warm up the service first.
+
+### Custom Tool Configurations
+Configure the following 3 custom API tools in your Vapi Assistant settings:
+
+   #### 1. `check_patient_by_phone` (Lookup Existing Patient)
+   - **Endpoint**: `POST https://voice-ai-agent-nu1v.onrender.com/vapi/tools/lookup`
+   - **Description**: Checks if a patient record already exists in the system by their phone number.
+
+   | Property | Type | Required | Description |
+   |---|---|---|---|
+   | `phone_number` | String | **Yes** | Caller contact phone number |
+
+   ---
+
+   #### 2. `register_patient` (Create Patient Registration)
+   - **Endpoint**: `POST https://voice-ai-agent-nu1v.onrender.com/vapi/tools/register`
+   - **Description**: Creates a new patient registration record once caller has confirmed all demographic details.
+
+   | Property | Type | Required | Description |
+   |---|---|---|---|
+   | `first_name` | String | **Yes** | Patient's first name |
+   | `last_name` | String | **Yes** | Patient's last name |
+   | `date_of_birth` | String | **Yes** | Date of birth in `YYYY-MM-DD` format |
+   | `sex` | String (Enum) | **Yes** | `Male`, `Female`, `Other`, `Prefer not to say` |
+   | `phone_number` | String | **Yes** | Contact phone number |
+   | `address_line_1` | String | **Yes** | Primary street address |
+   | `address_line_2` | String | No | Apartment, suite, or unit number (optional) |
+   | `city` | String | **Yes** | City name |
+   | `state` | String | **Yes** | US State (e.g. `CA`, `NY`) |
+   | `zip_code` | String | **Yes** | Postal ZIP code |
+   | `email` | String | No | Email address (optional) |
+   | `insurance_provider` | String | No | Health insurance provider name (optional) |
+   | `insurance_member_id` | String | No | Insurance member ID / policy number (optional) |
+   | `preferred_language` | String | No | Preferred spoken language (defaults to `English`) |
+   | `emergency_contact_name` | String | No | Emergency contact full name (optional) |
+   | `emergency_contact_phone` | String | No | Emergency contact phone number (optional) |
+
+   ---
+
+   #### 3. `update_patient` (Update Patient Details)
+   - **Endpoint**: `POST https://voice-ai-agent-nu1v.onrender.com/vapi/tools/update`
+   - **Description**: Updates an existing patient's details when requested by the caller.
+
+   | Property | Type | Required | Description |
+   |---|---|---|---|
+   | `patient_id` | String | No | UUID of the existing patient record |
+   | `phone_number` | String | No | Patient phone number for lookup if ID unknown |
+   | `first_name` | String | No | Patient's first name |
+   | `last_name` | String | No | Patient's last name |
+   | `date_of_birth` | String | No | Date of birth (`YYYY-MM-DD`) |
+   | `address_line_1` | String | No | Street address |
+   | `city` | String | No | City name |
+   | `state` | String | No | State abbreviation or name |
+   | `zip_code` | String | No | Postal ZIP code |
+   | `insurance_provider` | String | No | Insurance company name |
+   | `insurance_member_id` | String | No | Insurance member ID |
+
+### Reference Files
 1. **System Prompt**: See [`vapi/system_prompt.md`](vapi/system_prompt.md) for the complete conversational flow.
-2. **Assistant Config**: See [`vapi/assistant_config.json`](vapi/assistant_config.json).
-3. **Connecting Webhook**:
-   - In your Vapi Assistant settings, set the **Server URL** to:
-     `https://<your-deployed-url>/vapi/webhook`
-   - Or configure individual custom tools pointing to:
-     - `https://<your-deployed-url>/vapi/tools/lookup`
-     - `https://<your-deployed-url>/vapi/tools/register`
-     - `https://<your-deployed-url>/vapi/tools/update`
 
 ---
 
